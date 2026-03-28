@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Checklist - Loading...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 100%);
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 500px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1F4E78;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            color: #1F4E78;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .error {
+            background: #fee;
+            border: 1px solid #f00;
+            color: #c00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .manual-link {
+            margin-top: 20px;
+        }
+
+        a {
+            color: #1F4E78;
+            text-decoration: none;
+            border-bottom: 1px solid #1F4E78;
+        }
+
+        a:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <h1>Loading Healthcare Checklist...</h1>
+        <p>Please wait while we prepare your form</p>
+
+        <div id="status"></div>
+
+        <div class="manual-link">
+            <p>If you're not redirected automatically, click the link below:</p>
+            <a id="fallbackLink" href="#" target="_blank">Open Checklist Form</a>
+        </div>
+
+        <div class="info">
+            <strong>Info:</strong> Your recruiter email will be pre-filled in the form.
+        </div>
+    </div>
+
+    <script>
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const formUrl = urlParams.get('formUrl');
+        const recruiterEmail = urlParams.get('recruiterEmail');
+        const formName = urlParams.get('formName') || 'Healthcare Checklist';
+
+        const statusDiv = document.getElementById('status');
+        const fallbackLink = document.getElementById('fallbackLink');
+
+        // Update page title
+        document.title = formName + ' - Healthcare Checklist';
+
+        // Log parameters
+        console.log('Form Wrapper Loaded');
+        console.log('Form URL:', formUrl);
+        console.log('Recruiter Email:', recruiterEmail);
+
+        // Validate parameters
+        if (!formUrl) {
+            statusDiv.innerHTML = '<div class="error"><strong>Error:</strong> Missing form URL. Please check the link you received.</div>';
+            console.error('Missing formUrl parameter');
+        } else if (!recruiterEmail) {
+            statusDiv.innerHTML = '<div class="error"><strong>Error:</strong> Missing recruiter email. Please contact your recruiter.</div>';
+            console.error('Missing recruiterEmail parameter');
+        } else {
+            // Build the form URL with recruiter email in fragment
+            let targetUrl = formUrl;
+            try {
+                const urlObj = new URL(formUrl);
+                urlObj.hash = 'recruiterEmail=' + encodeURIComponent(recruiterEmail);
+                targetUrl = urlObj.toString();
+                console.log('Target URL with fragment:', targetUrl);
+            } catch(e) {
+                // Fallback if URL is not valid
+                console.log('URL parsing failed, using manual append');
+                targetUrl = formUrl + '#recruiterEmail=' + encodeURIComponent(recruiterEmail);
+            }
+
+            // Set fallback link
+            fallbackLink.href = targetUrl;
+
+            // Store email in localStorage for form access
+            try {
+                localStorage.setItem('formRecruiterEmail', recruiterEmail);
+                console.log('Stored email in localStorage');
+            } catch(e) {
+                console.log('Could not store in localStorage:', e.message);
+            }
+
+            // Also pass via sessionStorage
+            try {
+                sessionStorage.setItem('formRecruiterEmail', recruiterEmail);
+                console.log('Stored email in sessionStorage');
+            } catch(e) {
+                console.log('Could not store in sessionStorage:', e.message);
+            }
+
+            // Redirect after brief delay (allows logging)
+            setTimeout(function() {
+                console.log('Redirecting to form...');
+                window.location.href = targetUrl;
+            }, 500);
+        }
+
+        // Fallback timeout - if redirect doesn't work after 5 seconds, show message
+        setTimeout(function() {
+            const currentUrl = window.location.href;
+            // Only show message if we're still on this page (redirect failed)
+            if (window.location.href === currentUrl) {
+                statusDiv.innerHTML = '<div class="error"><strong>Note:</strong> If the form does not open, click the link below.</div>';
+                console.log('Fallback message shown');
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
